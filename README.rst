@@ -18,7 +18,14 @@ Usage
     import numpy as np
     from pygini import gini
 
-    A = np.random.random(100)
+    RG = np.random.default_rng(0)
+    A = RG.random(100)
     GI = gini(A)
+
+    # Also compute along axis
+    A = RG.random((100, 80, 80))
+    GI = gini(A, axis=0)
+
+    # GI.shape = (80, 80)
 
 See `examples` directory.
