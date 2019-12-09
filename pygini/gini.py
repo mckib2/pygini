@@ -9,8 +9,19 @@ References
 
 import numpy as np
 
-def gini(arr, eps=1e-8):
+def gini(arr, axis=None, eps=1e-8):
     '''Calculate the Gini coefficient of a numpy array.
+
+    Parameters
+    ----------
+    arr : array_like
+        Array to compute the Gini index of along axis.
+    axis : None or int, optional
+        If axis=None, arr is flattened before Gini index is computed.
+        If axis is int, Gini index will be computed along the
+        specified axis.
+    eps : float, optional
+        Small, positive number to make sure we don't divide by 0.
 
     Notes
     -----
@@ -22,17 +33,30 @@ def gini(arr, eps=1e-8):
             default.htm#nonparametric_methods/gini.htm
     '''
 
+    # Work out dimensions:
+    if axis is None:
+        arr = arr.flatten()
+        axis = 0
+
     # All values are treated equally, arrays must be 1d and > 0:
-    arr = np.abs(arr).flatten() + eps
+    arr = np.abs(arr) + eps
 
     # Values must be sorted:
-    arr = np.sort(arr)
+    arr = np.sort(arr, axis=axis)
 
     # Index per array element:
-    index = np.arange(1, arr.shape[0]+1)
+    idx = np.arange(1, arr.shape[axis] + 1)
 
     # Number of array elements:
     N = arr.shape[0]
 
+    # Numerator
+    sh = list(arr.shape)
+    sh[axis] = 1
+    for ax in range(len(sh)):
+        if ax != axis:
+            idx = np.expand_dims(idx, ax)
+    numerator = np.sum(np.tile(2*idx - N - 1, sh)*arr, axis=axis)
+
     # Gini coefficient:
-    return(np.sum((2*index - N - 1)*arr))/(N*np.sum(arr))
+    return numerator/(N*np.sum(arr, axis=axis))
