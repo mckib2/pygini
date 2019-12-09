@@ -5,7 +5,7 @@ from setuptools import find_packages
 
 setup(
     name='pygini',
-    version='0.0.1',
+    version='1.0.0',
     author='Nicholas McKibben',
     author_email='nicholas.bgp@gmail.com',
     packages=find_packages(),
@@ -17,7 +17,7 @@ setup(
     keywords=(
         'gini gini-index sparsity'),
     install_requires=[
-        "numpy>=1.16.2",
+        "numpy>=1.17.4",
     ],
     python_requires='>=3.6',
 )
