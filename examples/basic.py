@@ -6,6 +6,7 @@ from pygini import gini
 if __name__ == '__main__':
 
     # Random array 1D array
-    A = np.random.random(100)
+    RG = np.random.default_rng(0)
+    A = RG.random(100)
     GI = gini(A)
     print(GI)
