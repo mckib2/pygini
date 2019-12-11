@@ -1,6 +1,7 @@
 '''Compute Gini index.
 
-This implementation is inspired by the one found in [1]_.
+This implementation is inspired by the one found in [1]_.  This
+implementation handles multidimensional arrays.
 
 References
 ----------
@@ -9,19 +10,24 @@ References
 
 import numpy as np
 
-def gini(arr, axis=None, eps=1e-8):
+def gini(data, axis=None, eps=1e-8):
     '''Calculate the Gini coefficient of a numpy array.
 
     Parameters
     ----------
-    arr : array_like
+    data : array_like
         Array to compute the Gini index of along axis.
     axis : None or int, optional
-        If axis=None, arr is flattened before Gini index is computed.
+        If axis=None, data is flattened before Gini index is computed.
         If axis is int, Gini index will be computed along the
         specified axis.
     eps : float, optional
         Small, positive number to make sure we don't divide by 0.
+
+    Returns
+    -------
+    res : array_like
+        The Gini coefficients of numpy array data.
 
     Notes
     -----
@@ -33,30 +39,35 @@ def gini(arr, axis=None, eps=1e-8):
             default.htm#nonparametric_methods/gini.htm
     '''
 
-    # Work out dimensions:
+    # Work out dimensions
     if axis is None:
-        arr = arr.flatten()
-        axis = 0
+        data = data.flatten()
+        N = data.shape[0]
+        idx = np.arange(N) + 1 # 1-based indexing
+    else:
+        # Move gini index axis up front
+        data = np.moveaxis(data, axis, 0)
 
-    # All values are treated equally, arrays must be 1d and > 0:
-    arr = np.abs(arr) + eps
+        # Reshape so we only have two axes to deal with:
+        N, sh_orig = data.shape[0], data.shape[1:]
+        data = np.reshape(data, (N, -1))
+        idx = np.arange(N)[:, None] + 1
 
-    # Values must be sorted:
-    arr = np.sort(arr, axis=axis)
+    # Values cannot be negative
+    minval = np.amin(data.flatten())
+    if minval < 0:
+        data -= minval
 
-    # Index per array element:
-    idx = np.arange(1, arr.shape[axis] + 1)
+    # Values must be nonzero
+    data += eps
 
-    # Number of array elements:
-    N = arr.shape[0]
+    # Values must be sorted
+    data = np.sort(data, axis=0)
 
-    # Numerator
-    sh = list(arr.shape)
-    sh[axis] = 1
-    for ax in range(len(sh)):
-        if ax != axis:
-            idx = np.expand_dims(idx, ax)
-    numerator = np.sum(np.tile(2*idx - N - 1, sh)*arr, axis=axis)
-
-    # Gini coefficient:
-    return numerator/(N*np.sum(arr, axis=axis))
+    # Calculate Gini coefficient
+    num = np.sum((2*idx - N - 1)*data, axis=0)
+    den = N*np.sum(data, axis=0)
+    res = num/den
+    if axis is None:
+        return res
+    return np.reshape(res, sh_orig)
